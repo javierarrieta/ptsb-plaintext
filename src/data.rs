@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use thiserror::Error;
 use serde::{Serialize, Serializer};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, PartialOrd, PartialEq)]
 pub struct StatementEntry {
     #[serde(serialize_with="serialize_date")]
     date: NaiveDate,
@@ -30,6 +30,8 @@ pub enum AppError {
     InvalidData(String),
     #[error("IO Error: {0}")]
     IOError(String),
+    #[error("Invalid argument: {0}")]
+    InvalidArgument(String),
 }
 
 impl From<std::io::Error> for AppError {

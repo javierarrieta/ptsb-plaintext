@@ -2,6 +2,7 @@ mod data;
 mod ptsb;
 
 use std::env;
+use std::env::VarError;
 use std::string::String;
 use crate::data::AppError;
 use std::io;
@@ -12,14 +13,19 @@ impl From<csv::Error> for AppError {
     }
 }
 
+impl From<VarError> for AppError {
+    fn from(value: VarError) -> Self {
+        return AppError::InvalidArgument(value.to_string())
+    }
+}
+
 fn main() -> Result<(), AppError> {
     let arguments: Vec<String> = env::args().collect();
-    let fallback_path = env::var("PTSB_XLS_FILE").ok().unwrap_or("".to_string());
-    let f_from_args = arguments.get(1);
-    let f = f_from_args
-        .unwrap_or(&fallback_path);
+    let f = arguments.get(1)
+        .ok_or(AppError::InvalidArgument("No path provided as argument".to_string()))?;
 
-    let rows = ptsb::parse_file(f)?;
+    let mut rows = ptsb::parse_file(f)?;
+    rows.sort_by(|a,b| a.partial_cmp(b).unwrap());
 
     let mut wtr = csv::Writer::from_writer(io::stdout());
 
