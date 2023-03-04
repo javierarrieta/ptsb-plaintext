@@ -9,3 +9,5 @@ edition = "2021"
 calamine = "0.19.1"
 chrono = "0.4.23"
 thiserror = "1.0"
+csv = "1.2.0"
+serde = { version = "1.0", features = ["derive"] }

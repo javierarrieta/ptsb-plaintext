@@ -4,6 +4,13 @@ mod ptsb;
 use std::env;
 use std::string::String;
 use crate::data::AppError;
+use std::io;
+
+impl From<csv::Error> for AppError {
+    fn from(value: csv::Error) -> Self {
+        return AppError::InvalidData(value.to_string())
+    }
+}
 
 fn main() -> Result<(), AppError> {
     let arguments: Vec<String> = env::args().collect();
@@ -14,7 +21,13 @@ fn main() -> Result<(), AppError> {
 
     let rows = ptsb::parse_file(f)?;
 
-    println!("{:?}", rows);
+    let mut wtr = csv::Writer::from_writer(io::stdout());
+
+    for row in rows {
+        wtr.serialize(row)?
+    }
+
+    wtr.flush()?;
 
     return Ok(())
 }
