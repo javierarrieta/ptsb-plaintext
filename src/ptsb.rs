@@ -36,7 +36,7 @@ fn parse_row(d: &[DataType]) -> Option<StatementEntry> {
     };
     let maybe_amount = match (d.get(3), d.get(4)) {
         (Some(Float(i)), _) => Some(i.to_owned()),
-        (_, Some(Float(out))) => Some(-out),
+        (_, Some(Float(out))) => Some(out.to_owned()),
         _ => None,
     };
     let maybe_balance = match d.get(6) {
