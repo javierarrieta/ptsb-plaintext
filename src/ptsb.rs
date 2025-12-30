@@ -1,7 +1,9 @@
 use calamine::{DataType, open_workbook, Reader, Xls, XlsError};
 use calamine::DataType::{DateTime, Float, String as DString};
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDate;
 use crate::data::{StatementEntry, AppError};
+
+const MS_DAY: i64 = 1000 * 60 * 60 * 24;
 
 impl From<calamine::Error> for AppError {
     fn from(value: calamine::Error) -> Self {
@@ -19,7 +21,8 @@ fn parse_date(d: &DataType) -> Option<NaiveDate> {
     match d {
         DateTime(date) => {
             let i: i64 = *date as i64;
-            return NaiveDateTime::from_timestamp_millis(i).map(|ndt| ndt.date());
+            let epoch_days: i32 = (i / MS_DAY) as i32;
+            return NaiveDate::from_epoch_days(epoch_days);
         }
         DString(date) => {
             return NaiveDate::parse_from_str(date, "%d/%m/%Y").ok();
