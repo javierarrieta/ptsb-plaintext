@@ -1,19 +1,19 @@
-use calamine::{DataType, open_workbook, Reader, Xls, XlsError};
+use crate::data::{AppError, StatementLine, TransactionEnum};
 use calamine::DataType::{DateTime, Float, String as DString};
+use calamine::{open_workbook, DataType, Reader, Xls, XlsError};
 use chrono::NaiveDate;
-use crate::data::{StatementEntry, AppError};
 
 const MS_DAY: i64 = 1000 * 60 * 60 * 24;
 
 impl From<calamine::Error> for AppError {
     fn from(value: calamine::Error) -> Self {
-        return AppError::InvalidData(value.to_string())
+        return AppError::InvalidData(value.to_string());
     }
 }
 
 impl From<calamine::XlsError> for AppError {
     fn from(value: XlsError) -> Self {
-        return AppError::InvalidData(value.to_string())
+        return AppError::InvalidData(value.to_string());
     }
 }
 
@@ -27,11 +27,11 @@ fn parse_date(d: &DataType) -> Option<NaiveDate> {
         DString(date) => {
             return NaiveDate::parse_from_str(date, "%d/%m/%Y").ok();
         }
-        _ => return None
+        _ => return None,
     }
 }
 
-fn parse_row(d: &[DataType]) -> Option<StatementEntry> {
+fn parse_row(d: &[DataType]) -> Option<StatementLine> {
     let maybe_date = d.get(0).and_then(parse_date);
     let maybe_description = match d.get(2) {
         Some(DString(s)) => Some(s),
@@ -44,23 +44,40 @@ fn parse_row(d: &[DataType]) -> Option<StatementEntry> {
     };
     let maybe_balance = match d.get(6) {
         Some(Float(balance)) => Some(balance.to_owned()),
-        _ => None
+        _ => None,
     };
 
     return match (maybe_date, maybe_description, maybe_amount, maybe_balance) {
-        (Some(date), Some(desc), Some(amount), Some(balance)) =>
-            Some(StatementEntry::new(date, desc.to_string(), amount, balance)),
-        _ => None
+        (Some(date), Some(desc), Some(amount), Some(balance)) => Some(StatementLine::new(
+            date,
+            desc.to_string(),
+            amount,
+            guess_tx_type(desc),
+            balance,
+        )),
+        _ => None,
+    };
+}
+
+fn guess_tx_type(description: &str) -> Option<TransactionEnum> {
+    let tx_descriptor = description.split_ascii_whitespace().next();
+    match tx_descriptor {
+        Some("DD") => Some(TransactionEnum::DirectDebit),
+        Some("ICT") => Some(TransactionEnum::Transfer),
+        Some("CT") => Some(TransactionEnum::DirectDeposit),
+        Some("POS") | Some("TKN") | Some("CNC") => Some(TransactionEnum::POS),
+        _ => None,
     }
 }
 
-pub fn parse_file(file_path: &str) -> Result<Vec<StatementEntry>, AppError> {
-
+pub fn parse_file(file_path: &str) -> Result<Vec<StatementLine>, AppError> {
     let mut workbook: Xls<_> = open_workbook(file_path)?;
 
-    let range = workbook.worksheets().first()
+    let range = workbook
+        .worksheets()
+        .first()
         .map(|r| r.1.to_owned())
         .ok_or(AppError::InvalidData("No sheets present".to_string()))?;
 
-    return  Ok(range.rows().filter_map(parse_row).collect());
+    return Ok(range.rows().filter_map(parse_row).collect());
 }
