@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-calamine = "0.19.1"
+calamine = "0.32.0"
 chrono = "0.4.23"
-thiserror = "1.0"
+thiserror = "2.0.17"
 csv = "1.2.0"
 serde = { version = "1.0", features = ["derive"] }
