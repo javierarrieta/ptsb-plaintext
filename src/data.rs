@@ -1,10 +1,10 @@
 use chrono::NaiveDate;
-use thiserror::Error;
 use serde::{Serialize, Serializer};
+use thiserror::Error;
 
 #[derive(Debug, Serialize, PartialOrd, PartialEq)]
 pub struct StatementLine {
-    #[serde(serialize_with="serialize_date")]
+    #[serde(serialize_with = "serialize_date")]
     date: NaiveDate,
     description: String,
     amount: f64,
@@ -13,15 +13,27 @@ pub struct StatementLine {
 }
 
 fn serialize_date<S>(x: &NaiveDate, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+where
+    S: Serializer,
 {
     s.serialize_str(&x.to_string())
 }
 
 impl StatementLine {
-    pub fn new(date: NaiveDate, description: String, amount: f64, tx_type: Option<TransactionEnum>, balance: f64) -> StatementLine {
-        return StatementLine { date, description, amount, tx_type, balance }
+    pub fn new(
+        date: NaiveDate,
+        description: String,
+        amount: f64,
+        tx_type: Option<TransactionEnum>,
+        balance: f64,
+    ) -> StatementLine {
+        return StatementLine {
+            date,
+            description,
+            amount,
+            tx_type,
+            balance,
+        };
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::data::{AppError, StatementLine, TransactionEnum};
-use calamine::{Data, open_workbook, Reader, Xls, XlsError};
+use calamine::{open_workbook, Data, Reader, Xls, XlsError};
 use chrono::NaiveDate;
 
 const MS_DAY: i64 = 1000 * 60 * 60 * 24;
@@ -17,9 +17,8 @@ fn parse_date(d: &Data) -> Option<NaiveDate> {
             let epoch_days: i32 = (i / MS_DAY) as i32;
             NaiveDate::from_epoch_days(epoch_days)
         }
-        Data::String(date) => {
-            NaiveDate::parse_from_str(date, "%d/%m/%Y").ok()
-        }
+        Data::String(date) => NaiveDate::parse_from_str(date, "%d/%m/%Y").ok(),
+
         _ => None,
     }
 }
